@@ -95,3 +95,9 @@ The P0 does not yet record a build fingerprint or snapshot the target artifact;
 reproduction depends on retaining the same target and environment. It does not
 implement resource limits, process-tree termination, automatic build, mutation,
 coverage, corpus management, shrinking, or regression checks.
+
+## Implementation planning
+
+The repository-local [implementation roadmap](issues/open/20261029-js-fuzzing-roadmap.md)
+links the remaining implementation and research issues. Each issue records its
+scope, dependencies, acceptance criteria, test plan, and changelog impact.
