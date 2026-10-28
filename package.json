@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": { "test": "node --test test/runner.test.mjs" },
+  "scripts": {
+    "test": "node --test test/runner.test.mjs",
+    "test:moonbit": "node scripts/build-moonbit.mjs && node --test test/moonbit.test.mjs"
+  },
   "engines": { "node": ">=20" }
 }

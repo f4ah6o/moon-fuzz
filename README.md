@@ -9,8 +9,14 @@ coverage-guided fuzzer or the planned Rust CLI.
 ## Prerequisites
 
 - Node.js 20 or later.
-- For the MoonBit example, a MoonBit toolchain that supports `moon.mod`,
-  `moon.pkg`, foreign-library exports, and the JS backend.
+- For the MoonBit example and acceptance tests, MoonBit toolchain and core
+  `0.10.17+d971670cd` (moon `0.1.20261023`, commit `3778465`).
+  CI installs both with the official installer:
+
+  ```sh
+  curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- '0.10.17+d971670cd'
+  export PATH="$HOME/.moon/bin:$PATH"
+  ```
 
 ## Run the P0
 
@@ -37,42 +43,52 @@ Options: `--timeout` (execution milliseconds, default 1000),
 is terminated: targets must not spawn child processes. This is process isolation,
 not a security sandbox; run trusted targets only.
 
-## MoonBit bridge experiment
+## MoonBit JS target
 
-`examples/moonbit` contains a foreign-library target with the same interface.
-Build it with a compatible toolchain:
+`examples/moonbit` declares a `foreign_library` with `#export_name("fuzz_one")`
+and builds a CommonJS module. Build it with the pinned toolchain:
 
 ```sh
 cd examples/moonbit
 moon build --target js
 ```
 
-Then pass the resulting JS artifact exporting `fuzz_one` to `--module`. The
-artifact location and exact toolchain compatibility must be verified locally.
-This example has **not** been built or run in the initial implementation
-because the development environment did not have `moon` installed.
+The artifact is `examples/moonbit/_build/js/debug/build/target/target.js`.
+Node can load it with `require(path).fuzz_one(Uint8Array)`; MoonBit `Bytes`
+maps to `Uint8Array` in the JS backend. From the repository root:
+
+```sh
+printf '!' > /tmp/moon-fuzz-input
+node poc/cli.mjs run --module examples/moonbit/_build/js/debug/build/target/target.js --input /tmp/moon-fuzz-input
+```
+
+The example returns failure for `!` or the four bytes `42 00 ff 2a` (hex),
+reject for `R`, and pass otherwise. `H` loops in MoonBit and `X` calls
+`process.exit(17)` through a JS FFI function to exercise timeout and abnormal
+exit handling. These branches are deliberately added for acceptance testing.
 
 ## Tests
 
 ```sh
 npm test
+npm run test:moonbit
 ```
 
-The Node tests cover result classification, a synchronous infinite loop,
-startup timeout, abnormal exit, bounded logs, saving raw bytes, and replay.
-They use a JavaScript fixture; they do not verify MoonBit code generation or
-coverage.
+The first suite uses JavaScript fixtures. The second checks the toolchain
+version, cleans and rebuilds the MoonBit example, and tests the generated
+export and CLI outcomes, saved diagnostics, byte-for-byte inputs and replay.
+CI runs both suites on Ubuntu and macOS with Node 20 and 22. Neither suite
+collects coverage feedback.
 
 ## Next milestones
 
-1. Validate the MoonBit JS bridge and pin a working toolchain/runtime version.
-2. Prove per-input coverage attribution and reset with `A → B → A`, including
+1. Prove per-input coverage attribution and reset with `A → B → A`, including
    filtering out driver and initialization probes. Fail explicitly when coverage
    guidance is requested but cannot be verified.
-3. Implement the planned Rust supervisor, corpus and mutation loop, failure
+2. Implement the planned Rust supervisor, corpus and mutation loop, failure
    signatures, reproducibility checks, and shrinking. Preserve input bytes
    independently of coverage collection, even on crash or timeout.
-4. Add Wasm-GC, differential fuzzing, and structured generators after the JS
+3. Add Wasm-GC, differential fuzzing, and structured generators after the JS
    path is verified.
 
 The P0 does not yet record a build fingerprint or snapshot the target artifact;
