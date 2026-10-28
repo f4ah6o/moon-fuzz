@@ -45,7 +45,30 @@ test('target output is bounded and does not corrupt the control protocol', async
   const result = await run(6);
   assert.equal(result.kind, 'Pass');
   assert.equal(Buffer.byteLength(result.stdout), 65536);
+  assert.equal(Buffer.byteLength(result.stderr), 65536);
   assert.equal(result.logsTruncated, true);
+});
+
+test('worker exits after draining output even with pending handles', async () => {
+  const interval = await run(8);
+  assert.equal(interval.kind, 'Pass');
+  assert.equal(interval.code, 0);
+  assert.equal(interval.signal, null);
+  const late = await run(9);
+  assert.equal(late.kind, 'Pass');
+  assert.equal(late.code, 0);
+  assert.doesNotMatch(late.stderr, /late error/);
+});
+
+test('an abnormal worker exit cannot turn a reported pass into success', async () => {
+  const result = await run(10);
+  assert.equal(result.kind, 'Crash');
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /early asynchronous error/);
+  const afterResult = await run(11);
+  assert.equal(afterResult.kind, 'Crash');
+  assert.equal(afterResult.code, 17);
+  assert.match(afterResult.message, /after reporting a result/);
 });
 
 test('CLI saves exact failing bytes and metadata and can replay them', async () => {

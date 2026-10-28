@@ -1,8 +1,13 @@
 'use strict';
 
 function finish(message, code) {
-  process.exitCode = code;
-  process.send(message, () => process.disconnect());
+  // Drain queued target output and the result message before ending the fresh
+  // worker, even if the target left timers or other handles behind.
+  let pending = 3;
+  const done = () => { if (--pending === 0) process.exit(code); };
+  process.send(message, done);
+  process.stdout.write('', done);
+  process.stderr.write('', done);
 }
 
 process.on('message', message => {

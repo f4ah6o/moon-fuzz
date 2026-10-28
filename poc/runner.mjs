@@ -45,6 +45,9 @@ export async function execute({ modulePath, input, timeoutMs = 1000, startupTime
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       if (!outcome) outcome = { kind: phase === 'execution' ? 'Crash' : 'InfrastructureError', phase, message: 'worker exited without a result' };
+      else if (['Pass', 'Reject'].includes(outcome.kind) && (code !== 0 || signal !== null)) {
+        outcome = { kind: 'Crash', phase, message: 'worker exited abnormally after reporting a result' };
+      }
       resolve({ ...outcome, code, signal, stdout: stdout.toString('utf8'), stderr: stderr.toString('utf8'), logsTruncated: truncated });
     });
     child.send({ type: 'run', module: target, input: input.toString('base64') }, error => {
