@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "node --test test/runner.test.mjs",
-    "test:moonbit": "node scripts/build-moonbit.mjs && node --test test/moonbit.test.mjs"
+    "test": "node --test test/runner.test.mjs test/coverage.test.mjs",
+    "test:moonbit": "node scripts/build-moonbit.mjs && node --test test/moonbit.test.mjs test/coverage-moonbit.test.mjs"
   },
   "engines": { "node": ">=20" }
 }
