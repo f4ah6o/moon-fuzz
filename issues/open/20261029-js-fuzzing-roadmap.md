@@ -1,7 +1,7 @@
 # JS ファジングの未実装機能と実装順序を整理する
 
 Status: open
-Model: GPT-6 Astra Pro
+Model: GPT-6
 Created: 2026-10-29
 Updated: 2026-10-29
 Branch: docs/20261029-js-fuzzing-roadmap
@@ -76,7 +76,7 @@ JS の coverage-guided campaign、入力保存、再現確認・縮小・regress
 | regression checks | 失敗同一性調査の期待結果・終了コード | 再現確認との目的差、修正後の Pass／Reject の扱い、混在 suite、CI 集計 |
 | CPU／メモリ制限 | [資源制限の調査](20261029-resource-limits.md) | OS ごとの保証単位、強制と観測の違い、未対応指定のエラー、停止理由 |
 
-表の機能は未実装である。調査結果が内容を変えるため、現在は実装 Issue の受け入れ条件を確定しない。判断が尽くされた項目から通常の Issue を作成して表をリンクへ置き換える。
+coverage は P0 の実験的 adapter として一部実装済みだが、正式な collector 契約と campaign は未確定である。その他の表の機能は未実装である。調査結果が内容を変えるため、現在は実装 Issue の受け入れ条件を確定しない。判断が尽くされた項目から通常の Issue を作成して表をリンクへ置き換える。
 
 ### JS 統合受け入れの条件
 

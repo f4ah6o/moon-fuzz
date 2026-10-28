@@ -1,0 +1,10 @@
+import {
+  "f4ah6o/moon-fuzz-p0-example/target",
+  "moonbitlang/core/coverage",
+}
+
+pkgtype(kind: "foreign_library")
+
+options(
+  link: { "js": { "format": "cjs" } },
+)

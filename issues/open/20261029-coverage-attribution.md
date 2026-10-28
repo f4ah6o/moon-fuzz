@@ -1,7 +1,7 @@
 # MoonBit JS の入力別 coverage 帰属とリセットを検証する
 
 Status: open
-Model: GPT-6 Astra Pro
+Model: GPT-6
 Created: 2026-10-29
 Updated: 2026-10-29
 Branch: research/20261029-coverage-attribution
@@ -66,6 +66,8 @@ Branch: research/20261029-coverage-attribution
 本 Issue は検証と契約の確定に限定する。collector と campaign の実装時に利用者向け変更を記録する。
 
 ## 注記
+
+2026-10-29: P0 の実験的 `moon-probe-dump` adapter と分離した driver／target の A/B/A テストを追加。初期化 counter の破棄、package 単位の選択、取得失敗時の finding 保存を検証する。異なる初期化／driver の対照、計測方式の比較、対応環境表、collector の正式な契約は未完了のため、この調査は open のままとする。
 
 ### Wayfinder
 
