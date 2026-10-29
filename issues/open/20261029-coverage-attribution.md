@@ -77,7 +77,7 @@ Branch: research/20261029-coverage-attribution
 | 入口ファイル不変、require 先だけ変更 | 別プロセスの実行で feature が変化したが `build_sha256` は同じ。入口 hash は依存閉包の識別子ではない。 |
 | 収集の失敗 | 既存 `test/coverage.test.mjs` が取得失敗時の finding 保存、初期化失敗、異常終了、タイムアウトを確認。crash/timeout は coverage 不在で、空集合の成功ではない。 |
 
-追加された実 MoonBit driver 変更のテストを含む `npm run test:moonbit` はローカルでは **未実行**（`moon` が存在せず起動時 ENOENT）。Ubuntu/macOS × Node 20/22 の追加テストも現時点では未確認。CI 結果を見ずに対応環境とみなさない。新しい実 MoonBit variant は driver の初期化値と条件を共に変え、target と A/B の意味を保つ。成功時はその固定例での観測に限る。
+ローカルの `npm run test:moonbit` は **未実行**（`moon` が存在せず起動時 ENOENT）。一方、[CI run 40843519149](https://github.com/f4ah6o/moon-fuzz/actions/runs/40843519149) の commit `631cbca3431f8f204b4856a08ccd95d7d17abcb0` では Ubuntu/macOS × Node 20/22 の4組合せすべてで `npm test` 17/17 と `npm run test:moonbit` 7/7 が PASS。各ログで追加の driver variant の成功も確認した。この variant は driver の初期化値と条件を共に変え、target と A/B の意味を保つ。この観測は固定 toolchain と fixture に限り、任意の target・初期化・runtime を保証しない。
 
 ### 暫定契約と制約
 
