@@ -65,6 +65,28 @@ Branch: research/20261029-coverage-attribution
 
 本 Issue は検証と契約の確定に限定する。collector と campaign の実装時に利用者向け変更を記録する。
 
+## 2026-10-29 の追加観測
+
+基準: main `5272e00ee48769939556f896e0a9f1782a2d23ed`、Linux x86-64、Node v24.22.1。`node --test test/coverage-research.test.mjs` は 3/3 PASS、基準の `npm test` は 14/14 PASS。追加テストの counter dump は MoonBit の出力形式を模した **手書き JS fixture** であり、コンパイラの計装精度を示すものではない。
+
+| 対照 | 実際の観測 |
+| --- | --- |
+| 同一 collector、A→B→A | A の feature は同じ、B は別、続く空 dump は空。対象外 driver と類似名 package は除外された。 |
+| 初期化と driver のカウンター値を変更 | 対象の A/B 集合は不変。初期化は collector 作成前に完了させた。 |
+| 初回呼び出しに初期化を遅延 | 最初の A に初期化 feature が混入し、2回目の A と異なる。dump/reset だけでは入力処理と遅延初期化を分離できない。 |
+| 入口ファイル不変、require 先だけ変更 | 別プロセスの実行で feature が変化したが `build_sha256` は同じ。入口 hash は依存閉包の識別子ではない。 |
+| 収集の失敗 | 既存 `test/coverage.test.mjs` が取得失敗時の finding 保存、初期化失敗、異常終了、タイムアウトを確認。crash/timeout は coverage 不在で、空集合の成功ではない。 |
+
+追加された実 MoonBit driver 変更のテストを含む `npm run test:moonbit` はローカルでは **未実行**（`moon` が存在せず起動時 ENOENT）。Ubuntu/macOS × Node 20/22 の追加テストも現時点では未確認。CI 結果を見ずに対応環境とみなさない。新しい実 MoonBit variant は driver の初期化値と条件を共に変え、target と A/B の意味を保つ。成功時はその固定例での観測に限る。
+
+### 暫定契約と制約
+
+- feature は `counter_id` と配列 index の組で、正確な package を選択する。これは MoonBit が出力する probe の hit であり、edge や特定の branch 網羅率とは断定しない。
+- 呼び出し前に対象の初期化が完了し、入力以外の並行／遅延処理が計測区間で対象 counter を更新しないことが必要。collector はこの前提を検証できない。`coverage_end` は同期して dump と reset を行い、同じレイアウトと直後のゼロを確認できる必要がある。
+- 空 feature は正常な dump と reset が検証できた時のみ取得成功。取得不可、invalid、対象実行 crash／timeout は空集合と区別し、finding と元 bytes の保存は feedback の成否から独立させる。現行 P0 にこれらの明示的状態 enum はない。
+- 現行 `build_sha256` は入口の bytes だけで、完全な build identity ではない。feature の永続比較には、依存閉包を含む検証可能な build identity、collector/schema version と package 選択の一致を要する。これらが不明なら比較や guidance に使わない。具体的な snapshot は [artifact snapshot](20261029-artifact-snapshot.md) と連携する。
+- 方式比較、実 MoonBit での初期化条件の変更、複数 runtime と build にわたる ID の安定性は未検証。後続の [feedback 状態と識別契約](20261029-coverage-feedback-contract.md) は成立した安全条件を実装する課題であり、coverage-guided campaign の完成を意味しない。
+
 ## 注記
 
 2026-10-29: P0 の実験的 `moon-probe-dump` adapter と分離した driver／target の A/B/A テストを追加。初期化 counter の破棄、package 単位の選択、取得失敗時の finding 保存を検証する。異なる初期化／driver の対照、計測方式の比較、対応環境表、collector の正式な契約は未完了のため、この調査は open のままとする。

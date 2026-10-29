@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -112,6 +112,30 @@ test('coverage adapter selects target probes in fresh workers and isolates initi
   const timeout = await execute({ modulePath: instrumented, input: Buffer.from([72]), guidance: 'coverage', coveragePackage, timeoutMs: 250 });
   assert.equal(timeout.kind, 'Timeout');
   assert.equal(timeout.coverage, undefined);
+});
+
+test('a changed MoonBit driver preserves target attribution for A/B/A', async () => {
+  const variant = path.join(temp, 'variant');
+  await cp(project, variant, { recursive: true, filter: source => !source.split(path.sep).includes('_build') });
+  const driverPath = path.join(variant, 'driver/driver.mbt');
+  const source = await readFile(driverPath, 'utf8');
+  assert.match(source, /  1\n/);
+  assert.match(source, /initialized == 1/);
+  await writeFile(driverPath, source.replace('  1\n', '  2\n').replace('initialized == 1', 'initialized == 2'));
+  const out = path.join(temp, 'variant-build');
+  const build = spawnSync('moon', ['build', '--target', 'js', '--target-dir', out, '--enable-coverage'], { cwd: variant, encoding: 'utf8' });
+  assert.equal(build.status, 0, `variant build failed: ${build.error || build.stderr || build.stdout}`);
+  const modulePath = path.join(out, 'js/debug/build/driver/driver.js');
+  const sample = bytes => execute({ modulePath, input: Buffer.from(bytes), guidance: 'coverage', coveragePackage: 'f4ah6o/moon-fuzz-p0-example/target' });
+  const a = await sample([33]);
+  const b = await sample([0]);
+  const again = await sample([33]);
+  assert.equal(a.kind, 'PropertyFailure');
+  assert.equal(b.kind, 'Pass');
+  assert.deepEqual(a.coverage, again.coverage);
+  assert.notDeepEqual(a.coverage.features, b.coverage.features);
+  assert.deepEqual(a.coverage.features, expectedA);
+  assert.ok(a.coverage.features.every(feature => feature.counter_id.startsWith('f4ah6o/moon-fuzz-p0-example/target$')));
 });
 
 test('CLI records MoonBit coverage with the saved finding', async () => {
